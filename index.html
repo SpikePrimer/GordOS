@@ -32,7 +32,18 @@
 </head>
 
 <body>
-    <div id="bootloader">
+    <div id="pinGate" style="position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999;">
+        <div style="color: #fff; font-size: 2rem; margin-bottom: 2rem; font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: 0.1em;">Login</div>
+        <input type="password" id="pinInput" placeholder="Enter PIN"
+            style="background: #111; border: 1px solid #333; color: #fff; padding: 1rem 1.5rem; font-size: 1.2rem; border-radius: 8px; width: 200px; text-align: center; font-family: 'Inter', monospace;"
+            onkeydown="if(event.key === 'Enter') checkPin()">
+        <button onclick="checkPin()"
+            style="margin-top: 1rem; background: #222; border: 1px solid #444; color: #fff; padding: 0.75rem 2rem; font-size: 1rem; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif;">
+            Submit
+        </button>
+        <div id="pinError" style="color: #ff4444; margin-top: 1rem; font-size: 0.9rem; display: none; font-family: 'Inter', sans-serif;">Incorrect PIN</div>
+    </div>
+    <div id="bootloader" style="display: none;">
         <div class="boot-logo"><i class="fas fa-fish"></i></div>
         <h1 class="boot-title"><b>NAUTILUS OS</b></h1>
         <div class="boot-version">Version 1.5</div>
@@ -671,6 +682,29 @@
             </div>
         </div>
     </div>
+    <script>
+        // PIN Gate functionality
+        function checkPin() {
+            const pinInput = document.getElementById('pinInput');
+            const pinError = document.getElementById('pinError');
+            const pinGate = document.getElementById('pinGate');
+            const bootloader = document.getElementById('bootloader');
+
+            if (pinInput.value === '2347443') {
+                pinGate.style.display = 'none';
+                bootloader.style.display = '';
+            } else {
+                pinError.style.display = 'block';
+                pinInput.value = '';
+                pinInput.focus();
+            }
+        }
+
+        // Focus PIN input on load
+        window.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('pinInput').focus();
+        });
+    </script>
     <script src="/js/main.js" defer></script>
 
     <script>
