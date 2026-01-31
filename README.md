@@ -1,27 +1,3 @@
-
-### `WE NEED TO SEEK FUNDING FOR DOMAIN! SEE DOMAIN IDEAS FOR MORE DETAILS`
-## NautilusOS
-
-NautilusOS is a web-based operating system built entirely in HTML, CSS, and JS.
-Boot it up, log in, and mess around like it’s a real desktop with proxies, games, apps, an app store, windows, a file explorer, taskbar, and more.
-
-NAUTILUS BLOCKED BY YOUR SCHOOL?? DOWNLOAD "index.html" from the NautilusOS-OneFile folder! Open up index.html and you'll have (most*) of Nautilus's features!
-
-*Nautilus Browser is disabled by default in the file, but you may reenable it in the experimental settings under the BIOS (Left shift/F2 during boot), or in the experimental settings under Advanced. The Ultraviolet browser will not work in the file, unfortunately, due to service workers not working in file:/// or file:// url's :(
-
----
-
-## DEPLOY ME!!
-
-Make your own vercel.app instance of NautilusOS with this handy button!
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnautilus-os%2FNautilusOS)
-
-You can also do this with Netlify!
-
-[![Deploy with Netlify](https://netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/nautilus-os/nautilusos)
-
-
 You can also deploy NautilusOS in a Github Codespace:
 
 1. click on the green code button in this repo
@@ -35,29 +11,6 @@ You can also deploy NautilusOS in a Github Codespace:
 
 *To extend the life of your codespace link visit your profile settings, go to the Codespaces tab, and change the "Default idle timeout" time from 30 minutes to 240 minutes, which is the maximum time.
 
----
-
-## ✨ features
-
-There’s a ton of stuff to play with, but here’s a quick rundown (seriously, check them all out yourself):
-
-- bootloader and login screen
-- advanced cloaking options not seen in other proxies
-- allows creation of multiple accounts with different editable  permissions (superuser or standard users)
-- THREE built in proxy browsers, all using different technologies
-- tons of themes to customize Nautilus to your preference
-- fully animated desktop environment
-- BIOS for power users
-- draggable + resizable windows
-- notifications and a quick action menu
-- built in screenshotting, media viewing, music playing and more
-- taskbar to keep your apps organized
-- custom right-click menu to quickly perform tasks within Nautilus
-- searchable start menu with user info and apps grid  
-- a multitude of preinstalled apps + an app store to discover more
-- tons of customization and settings
-- exportable/importable profiles
-- AI-powered OS automation - NautilusOS comes prepackaged with a built in AI assistant capable of both answering your questions AND controlling your OS! (with your approval ofc)
 
 Basically... a whole little OS in your browser :D
 
