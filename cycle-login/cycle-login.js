@@ -30,6 +30,10 @@ function getVisitCount() {
   return isNaN(n) ? 0 : n;
 }
 
+function resetVisitCount() {
+  localStorage.setItem(STORAGE_KEYS.visitCount, '0');
+}
+
 function incrementVisitCount() {
   const next = getVisitCount() + 1;
   localStorage.setItem(STORAGE_KEYS.visitCount, String(next));
@@ -169,6 +173,21 @@ function removeLicenseDays(userId, days) {
   u.licenseExpiresAt = newExpiry <= Date.now() ? null : newExpiry;
   setUsers(users);
   return true;
+}
+
+/** Add X days to all users who currently have a non-expired license. */
+function bulkAddLicenseDays(days) {
+  const users = getUsers();
+  let count = 0;
+  const ms = days * 24 * 60 * 60 * 1000;
+  users.forEach((u) => {
+    if (u.licenseExpiresAt != null && u.licenseExpiresAt > Date.now()) {
+      u.licenseExpiresAt += ms;
+      count++;
+    }
+  });
+  if (count > 0) setUsers(users);
+  return count;
 }
 
 function isLicenseExpired(user) {

@@ -13188,6 +13188,34 @@ document.addEventListener("contextmenu", () => {
   hideProperties();
 });
 function updateLoginScreen() {
+  // Update cycle-login license remaining display
+  const licenseEl = document.getElementById("cycleLoginLicense");
+  if (licenseEl && typeof getSession === "function") {
+    try {
+      const session = getSession();
+      if (session && session.username && typeof findUserByUsername === "function") {
+        const user = findUserByUsername(session.username);
+        if (user && typeof getLicenseRemainingMs === "function" && typeof formatLicenseRemaining === "function") {
+          const ms = getLicenseRemainingMs(user);
+          if (ms > 0) {
+            licenseEl.textContent = "License: " + formatLicenseRemaining(ms) + " remaining";
+            licenseEl.style.display = "block";
+          } else {
+            licenseEl.textContent = "License: no time remaining";
+            licenseEl.style.display = "block";
+            licenseEl.style.color = "#e66";
+          }
+        } else {
+          licenseEl.style.display = "none";
+        }
+      } else {
+        licenseEl.style.display = "none";
+      }
+    } catch (e) {
+      licenseEl.style.display = "none";
+    }
+  }
+
   // Check for multi-user accounts
   const accounts = getAllAccounts();
 

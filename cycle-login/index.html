@@ -60,6 +60,16 @@
         }
         const result = validateLogin(username, pin, currentCycle);
         if (result.ok) {
+          if (result.dev) {
+            setDevAuth();
+            window.location.href = 'dev.html';
+            return;
+          }
+          var user = findUserByUsername(username);
+          if (!user || isLicenseExpired(user)) {
+            showMessage('No days left on license.', true);
+            return;
+          }
           setSession(username);
           window.location.href = '../index.html';
           return;
