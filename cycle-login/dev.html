@@ -188,7 +188,7 @@
       const devPinEl = document.getElementById('devPin');
       const devPinSubmit = document.getElementById('devPinSubmit');
       const devPinError = document.getElementById('devPinError');
-      const useApi = typeof getApiUrl === 'function' && getApiUrl();
+      const useApi = typeof useRemoteStorage === 'function' && useRemoteStorage();
 
       if (isDevAuth()) {
         gateEl.style.display = 'none';

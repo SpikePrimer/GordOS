@@ -56,7 +56,7 @@
       }
 
       async function init() {
-        const api = getApiUrl();
+        const api = typeof useRemoteStorage === 'function' && useRemoteStorage();
         if (api) {
           try {
             currentCycle = await getCurrentCycleAsync();
@@ -90,7 +90,7 @@
           return;
         }
         let result;
-        const api = getApiUrl();
+        const api = typeof useRemoteStorage === 'function' && useRemoteStorage();
         if (api) {
           try {
             result = await validateLoginAsync(username, pin, currentCycle);

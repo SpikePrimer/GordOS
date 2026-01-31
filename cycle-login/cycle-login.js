@@ -239,7 +239,7 @@ function getVisitsByUser() {
   return byUser;
 }
 
-// --- API mode (cross-device): set window.CYCLE_LOGIN_API_URL in config.js ---
+// --- Remote storage (cross-device): Supabase OR Node API ---
 const DEV_TOKEN_KEY = 'cycle_login_dev_token';
 
 function getApiUrl() {
@@ -249,6 +249,51 @@ function getApiUrl() {
   } catch {
     return '';
   }
+}
+
+function getSupabaseUrl() {
+  try {
+    const u = typeof window !== 'undefined' && window.CYCLE_LOGIN_SUPABASE_URL;
+    return u ? String(window.CYCLE_LOGIN_SUPABASE_URL).replace(/\/$/, '') : '';
+  } catch {
+    return '';
+  }
+}
+
+function getSupabaseAnonKey() {
+  try {
+    return (typeof window !== 'undefined' && window.CYCLE_LOGIN_SUPABASE_ANON_KEY) ? String(window.CYCLE_LOGIN_SUPABASE_ANON_KEY) : '';
+  } catch {
+    return '';
+  }
+}
+
+function useSupabase() {
+  return getSupabaseUrl() && getSupabaseAnonKey();
+}
+
+function useRemoteStorage() {
+  return useSupabase() || getApiUrl();
+}
+
+async function supabaseFetch(method, path, body) {
+  const base = getSupabaseUrl();
+  const key = getSupabaseAnonKey();
+  if (!base || !key) throw new Error('Supabase not configured');
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: key,
+      Authorization: 'Bearer ' + key,
+      Prefer: 'return=representation',
+    },
+  };
+  if (body != null && method !== 'GET') opts.body = JSON.stringify(body);
+  const res = await fetch(base + path, opts);
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || res.statusText);
+  return text ? JSON.parse(text) : null;
 }
 
 function getDevToken() {
@@ -279,59 +324,169 @@ async function apiRequest(method, path, body, useDevToken) {
 }
 
 async function getCurrentCycleAsync() {
+  if (useSupabase()) {
+    const state = await supabaseFetch('GET', '/rest/v1/cycle_state?key=eq.visit_count&select=value');
+    let count = (state && state[0] && state[0].value != null) ? Number(state[0].value) : 0;
+    count += 1;
+    if (state && state[0]) {
+      await supabaseFetch('PATCH', '/rest/v1/cycle_state?key=eq.visit_count', { value: count });
+    } else {
+      await supabaseFetch('POST', '/rest/v1/cycle_state', { key: 'visit_count', value: count });
+    }
+    return ((count - 1) % 5) + 1;
+  }
   const data = await apiRequest('POST', '/api/visit-count/inc', null, false);
   return data ? data.cycle : 1;
 }
 
 async function addPageVisitAsync(entry) {
-  await apiRequest('POST', '/api/visits', { ...entry, timestamp: entry.timestamp || Date.now(), sessionStart: entry.sessionStart }, false);
+  const ts = entry.timestamp || Date.now();
+  const row = { username: entry.username || null, type: entry.type || null, referrer: entry.referrer || '', cycle: entry.cycle || null, timestamp: ts, duration_ms: entry.durationMs || null, session_start: entry.sessionStart || (entry.type === 'app' ? ts : null) };
+  if (useSupabase()) {
+    await supabaseFetch('POST', '/rest/v1/cycle_visits', row);
+    return;
+  }
+  await apiRequest('POST', '/api/visits', { ...entry, timestamp: ts, sessionStart: entry.sessionStart }, false);
 }
 
 async function validateLoginAsync(username, pin, currentCycle) {
+  if (useSupabase()) {
+    try {
+      const res = await supabaseFetch('GET', '/rest/v1/cycle_users?username=ilike.' + encodeURIComponent(username.trim()) + '&select=*');
+      const users = Array.isArray(res) ? res : [];
+      const user = users[0];
+      if (!user) return { ok: false, error: 'Unknown username' };
+      if (pin === DEV_PIN) return { ok: true, dev: true };
+      const codes = user.cycle_codes || [];
+      const idx = (currentCycle - 1) | 0;
+      if (idx < 0 || idx >= codes.length) return { ok: false, error: 'Invalid cycle' };
+      if (pin === codes[idx]) return { ok: true, licenseExpiresAt: user.license_expires_at ?? null };
+      if (codes.includes(pin)) return { ok: false, error: 'Incorrect — that code is not for the current cycle.' };
+      return { ok: false, error: 'Incorrect PIN.' };
+    } catch (e) {
+      return { ok: false, error: 'Network error' };
+    }
+  }
   const data = await apiRequest('POST', '/api/validate', { username, pin, cycle: currentCycle }, false);
   return data || { ok: false, error: 'Network error' };
 }
 
 async function updateLastVisitDurationAsync(username, durationMs) {
+  if (useSupabase()) {
+    const res = await supabaseFetch('GET', '/rest/v1/cycle_visits?username=eq.' + encodeURIComponent(username) + '&order=timestamp.desc&limit=1&select=id');
+    const rows = Array.isArray(res) ? res : [];
+    if (rows.length && rows[0].id) await supabaseFetch('PATCH', '/rest/v1/cycle_visits?id=eq.' + rows[0].id, { duration_ms: Math.round(durationMs) });
+    return;
+  }
   await apiRequest('PATCH', '/api/visits/last-duration', { username, durationMs }, false);
 }
 
 async function getUsersAsync() {
+  if (useSupabase()) {
+    const res = await supabaseFetch('GET', '/rest/v1/cycle_users?select=*');
+    const rows = Array.isArray(res) ? res : [];
+    return rows.map(function (r) {
+      return { id: r.id, username: r.username, cycleCodes: r.cycle_codes || [], createdAt: r.created_at, licenseExpiresAt: r.license_expires_at != null ? r.license_expires_at : null };
+    });
+  }
   const data = await apiRequest('GET', '/api/users', null, true);
   return Array.isArray(data) ? data : [];
 }
 
 async function createUserAsync(username) {
+  if (useSupabase()) {
+    const un = String(username).trim();
+    const existing = await supabaseFetch('GET', '/rest/v1/cycle_users?username=ilike.' + encodeURIComponent(un) + '&select=id');
+    if (existing && existing.length > 0) return { ok: false, error: 'Username already exists' };
+    const cycleCodes = generateCycleCodes();
+    const row = { username: un, cycle_codes: cycleCodes, created_at: Date.now(), license_expires_at: null };
+    await supabaseFetch('POST', '/rest/v1/cycle_users', row);
+    return { ok: true, cycleCodes };
+  }
   return await apiRequest('POST', '/api/users', { username }, true) || { ok: false, error: 'Network error' };
 }
 
 async function deleteUserAsync(id) {
+  if (useSupabase()) {
+    await supabaseFetch('DELETE', '/rest/v1/cycle_users?id=eq.' + encodeURIComponent(id));
+    return;
+  }
   await apiRequest('DELETE', '/api/users/' + encodeURIComponent(id), null, true);
 }
 
 async function getPageVisitsAsync() {
+  if (useSupabase()) {
+    const res = await supabaseFetch('GET', '/rest/v1/cycle_visits?select=*&order=timestamp.desc');
+    const rows = Array.isArray(res) ? res : [];
+    return rows.map(function (r) {
+      return { username: r.username, type: r.type, referrer: r.referrer, cycle: r.cycle, timestamp: r.timestamp, durationMs: r.duration_ms, sessionStart: r.session_start };
+    });
+  }
   const data = await apiRequest('GET', '/api/visits', null, true);
   return Array.isArray(data) ? data : [];
 }
 
 async function setUserLicenseAsync(userId, expiresAt) {
+  if (useSupabase()) {
+    await supabaseFetch('PATCH', '/rest/v1/cycle_users?id=eq.' + encodeURIComponent(userId), { license_expires_at: expiresAt == null ? null : expiresAt });
+    return;
+  }
   await apiRequest('PATCH', '/api/users/' + encodeURIComponent(userId) + '/license', { expiresAt }, true);
 }
 
 async function removeLicenseDaysAsync(userId, days) {
+  if (useSupabase()) {
+    const res = await supabaseFetch('GET', '/rest/v1/cycle_users?id=eq.' + encodeURIComponent(userId) + '&select=license_expires_at');
+    const rows = Array.isArray(res) ? res : [];
+    const u = rows[0];
+    if (!u || u.license_expires_at == null) return;
+    const ms = (days | 0) * 24 * 60 * 60 * 1000;
+    let newExpiry = Number(u.license_expires_at) - ms;
+    if (newExpiry <= Date.now()) newExpiry = null;
+    await supabaseFetch('PATCH', '/rest/v1/cycle_users?id=eq.' + encodeURIComponent(userId), { license_expires_at: newExpiry });
+    return;
+  }
   await apiRequest('PATCH', '/api/users/' + encodeURIComponent(userId) + '/license', { removeDays: days }, true);
 }
 
 async function bulkAddLicenseDaysAsync(days) {
+  if (useSupabase()) {
+    const res = await supabaseFetch('GET', '/rest/v1/cycle_users?select=id,license_expires_at');
+    const rows = Array.isArray(res) ? res : [];
+    const now = Date.now();
+    const ms = (days | 0) * 24 * 60 * 60 * 1000;
+    let count = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (r.license_expires_at != null && Number(r.license_expires_at) > now) {
+        await supabaseFetch('PATCH', '/rest/v1/cycle_users?id=eq.' + encodeURIComponent(r.id), { license_expires_at: Number(r.license_expires_at) + ms });
+        count++;
+      }
+    }
+    return count;
+  }
   const data = await apiRequest('POST', '/api/users/bulk-add-license', { days }, true);
   return data && data.count != null ? data.count : 0;
 }
 
 async function resetVisitCountAsync() {
+  if (useSupabase()) {
+    try {
+      await supabaseFetch('PATCH', '/rest/v1/cycle_state?key=eq.visit_count', { value: 0 });
+    } catch (_) {
+      await supabaseFetch('POST', '/rest/v1/cycle_state', { key: 'visit_count', value: 0 });
+    }
+    return;
+  }
   await apiRequest('POST', '/api/visit-count/reset', null, true);
 }
 
 async function getVisitCountAsync() {
+  if (useSupabase()) {
+    const res = await supabaseFetch('GET', '/rest/v1/cycle_state?key=eq.visit_count&select=value');
+    if (res && res[0] && res[0].value != null) return Number(res[0].value) | 0;
+    return 0;
+  }
   const data = await apiRequest('GET', '/api/visit-count', null, false);
   return data && data.count != null ? data.count : 0;
 }
@@ -342,14 +497,20 @@ async function getCurrentCycleNoIncrementAsync() {
   return ((count - 1) % 5) + 1;
 }
 
-/** Exchange dev PIN for token; call when opening dev panel with API. Returns true if success. */
+/** Exchange dev PIN for token (Node server) or just validate PIN (Supabase). Returns true if success. */
 async function apiDevAuth(pin) {
+  if (pin !== DEV_PIN) return false;
+  if (useSupabase()) {
+    setDevAuth();
+    return true;
+  }
   const base = getApiUrl();
   if (!base) return false;
   try {
     const data = await apiRequest('POST', '/api/auth/dev', { pin }, false);
     if (data && data.token) {
       setDevToken(data.token);
+      setDevAuth();
       return true;
     }
   } catch (_) {}

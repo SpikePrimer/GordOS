@@ -58,7 +58,7 @@
       var session = getSession();
       if (!session || !session.username) return;
       var start = Date.now();
-      var api = typeof getApiUrl === 'function' && getApiUrl();
+      var api = typeof useRemoteStorage === 'function' && useRemoteStorage();
       if (api) {
         (async function () {
           try {
