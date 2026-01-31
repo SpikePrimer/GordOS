@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content</title>
+  <link rel="stylesheet" href="cycle-login.css" />
+</head>
+<body class="cycle-login-app">
+  <header class="app-bar">
+    <span class="user" id="userLabel">—</span>
+    <span class="license-remaining" id="licenseRemaining"></span>
+    <a href="index.html">Log out</a>
+  </header>
+  <main class="textbook" id="mainContent">
+    <h2>Content</h2>
+    <p>This is the main content area. You are logged in. Use the dev panel to create and manage accounts; log in here with your username and the PIN for the current cycle shown at the bottom of the page.</p>
+  </main>
+  <footer class="cycle-footer-app">Current cycle is <span id="cycleNum">1</span>.</footer>
+
+  <script src="cycle-login.js"></script>
+  <script>
+    (function () {
+      const session = getSession();
+      if (!session || !session.username) {
+        window.location.href = 'index.html';
+        return;
+      }
+      const user = findUserByUsername(session.username);
+      if (!user || isLicenseExpired(user)) {
+        clearSession();
+        window.location.href = 'expired.html';
+        return;
+      }
+      const cycle = getCurrentCycleNoIncrement();
+      const remainingMs = getLicenseRemainingMs(user);
+      document.getElementById('userLabel').textContent = session.username;
+      document.getElementById('licenseRemaining').textContent = 'License: ' + formatLicenseRemaining(remainingMs) + ' remaining';
+      document.getElementById('cycleNum').textContent = cycle;
+      addPageVisit({
+        username: session.username,
+        type: 'app',
+        referrer: document.referrer || '',
+        cycle,
+      });
+    })();
+  </script>
+</body>
+</html>

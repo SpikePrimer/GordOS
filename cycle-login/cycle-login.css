@@ -1,0 +1,154 @@
+/* Cycle Login - gate & app styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body.cycle-login-gate {
+  background: #000;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: #fff;
+}
+
+.cycle-login-gate .gate-box {
+  text-align: center;
+  padding: 2rem;
+}
+
+.cycle-login-gate h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 2rem;
+  color: #fff;
+}
+
+.cycle-login-gate .field {
+  margin-bottom: 1rem;
+}
+
+.cycle-login-gate input {
+  background: #111;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 0.75rem 1.25rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  width: 220px;
+  text-align: center;
+}
+
+.cycle-login-gate input::placeholder {
+  color: #666;
+}
+
+.cycle-login-gate input:focus {
+  outline: none;
+  border-color: #555;
+}
+
+.cycle-login-gate button {
+  background: #222;
+  border: 1px solid #444;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.cycle-login-gate button:hover {
+  background: #333;
+}
+
+.cycle-login-gate .message {
+  margin-top: 1rem;
+  min-height: 1.5em;
+  font-size: 0.95rem;
+}
+
+.cycle-login-gate .message.error {
+  color: #e66;
+}
+
+.cycle-login-gate .cycle-footer {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Textbook / app page */
+body.cycle-login-app {
+  background: #0a0a0a;
+  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: #e0e0e0;
+}
+
+.cycle-login-app .app-bar {
+  background: #111;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #222;
+}
+
+.cycle-login-app .app-bar .user {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.cycle-login-app .app-bar .license-remaining {
+  font-size: 0.85rem;
+  color: #7dd3c0;
+  margin-left: auto;
+  margin-right: 1rem;
+}
+
+.cycle-login-app .app-bar a {
+  color: #7dd3c0;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.cycle-login-app .textbook {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 8px;
+  line-height: 1.7;
+}
+
+.cycle-login-app .textbook h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.cycle-login-app .cycle-footer-app {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  color: #555;
+  background: #0a0a0a;
+  border-top: 1px solid #1a1a1a;
+}

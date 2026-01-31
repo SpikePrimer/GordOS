@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dev — Cycle Login</title>
+  <link rel="stylesheet" href="cycle-login.css" />
+  <style>
+    body.dev-panel { background: #0d0d0d; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; padding: 1rem; }
+    .dev-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #222; }
+    .dev-header h1 { font-size: 1.25rem; font-weight: 600; }
+    .dev-header a { color: #7dd3c0; text-decoration: none; font-size: 0.9rem; }
+    .dev-gate { max-width: 280px; margin: 4rem auto; text-align: center; }
+    .dev-gate input { background: #111; border: 1px solid #333; color: #fff; padding: 0.75rem; font-size: 1rem; border-radius: 8px; width: 100%; margin-bottom: 0.75rem; text-align: center; }
+    .dev-gate button { background: #222; border: 1px solid #444; color: #fff; padding: 0.75rem 1.25rem; border-radius: 8px; cursor: pointer; width: 100%; }
+    .dev-gate .error { color: #e66; font-size: 0.9rem; margin-top: 0.5rem; }
+    .section { margin-bottom: 2rem; }
+    .section h2 { font-size: 1.1rem; margin-bottom: 0.75rem; color: #aaa; }
+    .create-box { background: #111; border: 1px solid #222; border-radius: 8px; padding: 1rem; max-width: 400px; }
+    .create-box input { background: #0a0a0a; border: 1px solid #333; color: #fff; padding: 0.5rem 0.75rem; border-radius: 6px; width: 100%; margin-bottom: 0.75rem; }
+    .create-box button { background: #1a4a3a; color: #7dd3c0; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+    .create-box button:hover { background: #256b52; }
+    .warning-box { background: #2a1a0a; border: 1px solid #5a3a1a; border-radius: 8px; padding: 1rem; margin-top: 1rem; color: #e8c060; font-size: 0.9rem; }
+    .warning-box strong { display: block; margin-bottom: 0.25rem; }
+    .codes-list { font-family: monospace; font-size: 0.9rem; margin-top: 0.5rem; }
+    .codes-list span { display: inline-block; margin-right: 0.5rem; margin-bottom: 0.25rem; }
+    .user-list { list-style: none; }
+    .user-list li { background: #111; border: 1px solid #222; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+    .user-list .name { font-weight: 600; }
+    .user-list .meta { font-size: 0.85rem; color: #888; }
+    .user-list .license-status { font-size: 0.85rem; margin-top: 0.35rem; }
+    .user-list .license-status.none { color: #888; }
+    .user-list .license-status.expired { color: #e66; }
+    .user-list .license-status.ok { color: #7dd3c0; }
+    .user-list .license-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .user-list .license-actions input { width: 4rem; background: #0a0a0a; border: 1px solid #333; color: #fff; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; text-align: center; }
+    .user-list .license-actions button { background: #1a3a2a; color: #7dd3c0; border: none; padding: 0.35rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+    .user-list .license-actions button.remove-license { background: #3a1a1a; color: #e66; }
+    .user-list button { background: #3a1a1a; color: #e66; border: none; padding: 0.35rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+    .user-list button:hover { background: #4a2a2a; }
+    .user-list a { color: #7dd3c0; font-size: 0.85rem; }
+    .visits-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .visits-table th, .visits-table td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #222; }
+    .visits-table th { color: #888; font-weight: 600; }
+    .visits-table tr:hover { background: #111; }
+    .stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .stat { background: #111; border: 1px solid #222; border-radius: 8px; padding: 1rem; min-width: 140px; }
+    .stat .value { font-size: 1.5rem; font-weight: 600; color: #7dd3c0; }
+    .stat .label { font-size: 0.85rem; color: #888; }
+  </style>
+</head>
+<body class="dev-panel">
+  <div id="devGate" class="dev-gate" style="display: none;">
+    <h2>Dev access</h2>
+    <input type="password" id="devPin" placeholder="Dev PIN" inputmode="numeric" />
+    <button type="button" id="devPinSubmit">Enter</button>
+    <div class="error" id="devPinError"></div>
+  </div>
+
+  <div id="devContent" style="display: none;">
+    <header class="dev-header">
+      <h1>Dev — Cycle Login</h1>
+      <a href="index.html">← Back to login</a>
+    </header>
+
+    <section class="section">
+      <h2>Create login</h2>
+      <div class="create-box">
+        <input type="text" id="newUsername" placeholder="Username for new account" />
+        <button type="button" id="createUser">Create account</button>
+        <div id="createResult"></div>
+        <div id="createWarning" class="warning-box" style="display: none;">
+          <strong>REMEMBER TO WRITE THE CYCLE CODES DOWN OR YOU WILL NOT BE ABLE TO LOG IN.</strong>
+          <div class="codes-list" id="newCodes"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Accounts</h2>
+      <ul class="user-list" id="userList"></ul>
+    </section>
+
+    <section class="section">
+      <h2>Page visits &amp; activity <span id="filterLabel" style="font-weight: normal; color: #7dd3c0;"></span> <a href="#" id="showAllVisits" style="font-size: 0.85rem; display: none;">Show all</a></h2>
+      <div class="stats">
+        <div class="stat"><span class="value" id="statVisits">0</span><span class="label">Total visits</span></div>
+        <div class="stat"><span class="value" id="statUsers">0</span><span class="label">Users with visits</span></div>
+        <div class="stat"><span class="value" id="statCycle">1</span><span class="label">Current cycle</span></div>
+      </div>
+      <table class="visits-table" id="visitsTable">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Type</th>
+            <th>Referrer / opened from</th>
+            <th>Cycle</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="visitsBody"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script src="cycle-login.js"></script>
+  <script>
+    (function () {
+      const gateEl = document.getElementById('devGate');
+      const contentEl = document.getElementById('devContent');
+      const devPinEl = document.getElementById('devPin');
+      const devPinSubmit = document.getElementById('devPinSubmit');
+      const devPinError = document.getElementById('devPinError');
+
+      if (isDevAuth()) {
+        gateEl.style.display = 'none';
+        contentEl.style.display = 'block';
+        initPanel();
+      } else {
+        gateEl.style.display = 'block';
+        devPinSubmit.addEventListener('click', function () {
+          if (devPinEl.value.trim() === DEV_PIN) {
+            setDevAuth();
+            gateEl.style.display = 'none';
+            contentEl.style.display = 'block';
+            initPanel();
+          } else {
+            devPinError.textContent = 'Incorrect dev PIN.';
+          }
+        });
+        devPinEl.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') devPinSubmit.click();
+        });
+      }
+
+      function initPanel() {
+        renderUsers();
+        renderVisits();
+        renderStats();
+
+        document.getElementById('createUser').addEventListener('click', function () {
+          const input = document.getElementById('newUsername');
+          const username = input.value.trim();
+          const resultEl = document.getElementById('createResult');
+          const warningEl = document.getElementById('createWarning');
+          const codesEl = document.getElementById('newCodes');
+          resultEl.textContent = '';
+          warningEl.style.display = 'none';
+          if (!username) {
+            resultEl.textContent = 'Enter a username.';
+            resultEl.className = 'error';
+            return;
+          }
+          const result = createUser(username);
+          if (result.ok) {
+            resultEl.textContent = 'Account created.';
+            resultEl.className = '';
+            codesEl.innerHTML = result.cycleCodes.map(function (c, i) { return '<span>C' + (i + 1) + ': ' + c + '</span>'; }).join('');
+            warningEl.style.display = 'block';
+            input.value = '';
+            renderUsers();
+          } else {
+            resultEl.textContent = result.error || 'Failed.';
+            resultEl.className = 'error';
+          }
+        });
+      }
+
+      function licenseStatus(u) {
+        if (u.licenseExpiresAt == null) return { text: 'License: none', cls: 'none' };
+        if (Date.now() >= u.licenseExpiresAt) return { text: 'License: expired', cls: 'expired' };
+        var ms = u.licenseExpiresAt - Date.now();
+        return { text: 'License: ' + formatLicenseRemaining(ms) + ' remaining (expires ' + formatTime(u.licenseExpiresAt) + ')', cls: 'ok' };
+      }
+
+      function renderUsers() {
+        const users = getUsers();
+        const ul = document.getElementById('userList');
+        ul.innerHTML = users.map(function (u) {
+          const visits = getPageVisits().filter(function (v) { return v.username === u.username; });
+          const lastVisit = visits.length ? new Date(Math.max.apply(null, visits.map(function (v) { return v.timestamp; }))) : null;
+          const lic = licenseStatus(u);
+          return '<li data-user-id="' + escapeHtml(u.id) + '"><div><span class="name">' + escapeHtml(u.username) + '</span><span class="meta"> Created ' + formatTime(u.createdAt) + (lastVisit ? ' · Last visit ' + formatTime(lastVisit.getTime()) : '') + '</span><div class="license-status ' + lic.cls + '">' + escapeHtml(lic.text) + '</div><div class="license-actions"><input type="number" min="1" placeholder="Days" value="30" class="license-days" /><button type="button" class="add-license">Add / extend days</button><button type="button" class="remove-license">Remove license</button></div></div><div><a href="#" data-user="' + escapeHtml(u.username) + '" class="view-visits">Visits</a> <button type="button" data-id="' + escapeHtml(u.id) + '" class="delete-user">Remove</button></div></li>';
+        }).join('') || '<li class="meta">No accounts yet. Create one above.</li>';
+
+        ul.querySelectorAll('.delete-user').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            if (confirm('Remove this account? They will not be able to log in.')) {
+              deleteUser(btn.getAttribute('data-id'));
+              renderUsers();
+              renderVisits();
+              renderStats();
+            }
+          });
+        });
+        ul.querySelectorAll('.add-license').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var li = btn.closest('li');
+            var userId = li.getAttribute('data-user-id');
+            var input = li.querySelector('.license-days');
+            var days = parseInt(input.value, 10) || 30;
+            if (days < 1) days = 1;
+            var user = getUserById(userId);
+            if (!user) return;
+            var base = user.licenseExpiresAt != null && user.licenseExpiresAt > Date.now() ? user.licenseExpiresAt : Date.now();
+            setUserLicense(userId, base + days * 24 * 60 * 60 * 1000);
+            renderUsers();
+          });
+        });
+        ul.querySelectorAll('.remove-license').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var li = btn.closest('li');
+            var userId = li.getAttribute('data-user-id');
+            setUserLicense(userId, null);
+            renderUsers();
+          });
+        });
+        ul.querySelectorAll('.view-visits').forEach(function (a) {
+          a.addEventListener('click', function (e) {
+            e.preventDefault();
+            var user = a.getAttribute('data-user');
+            var rows = document.querySelectorAll('#visitsBody tr');
+            rows.forEach(function (r) {
+              r.style.display = r.getAttribute('data-username') === user ? '' : 'none';
+            });
+            document.getElementById('filterLabel').textContent = 'Showing: ' + user;
+            document.getElementById('showAllVisits').style.display = 'inline';
+          });
+        });
+      }
+      document.getElementById('showAllVisits').addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelectorAll('#visitsBody tr').forEach(function (r) { r.style.display = ''; });
+        document.getElementById('filterLabel').textContent = '';
+        document.getElementById('showAllVisits').style.display = 'none';
+      });
+
+      function renderVisits() {
+        const visits = getPageVisits().slice().reverse();
+        const tbody = document.getElementById('visitsBody');
+        tbody.innerHTML = visits.map(function (v) {
+          return '<tr data-username="' + escapeHtml(v.username || '') + '"><td>' + escapeHtml(v.username || '(login page)') + '</td><td>' + escapeHtml(v.type || '—') + '</td><td>' + escapeHtml((v.referrer || '').slice(0, 60)) + (v.referrer && v.referrer.length > 60 ? '…' : '') + '</td><td>' + (v.cycle || '—') + '</td><td>' + formatTime(v.timestamp) + '</td></tr>';
+        }).join('');
+      }
+
+      function renderStats() {
+        const visits = getPageVisits();
+        const usernames = new Set(visits.map(function (v) { return v.username || '(login page)'; }));
+        document.getElementById('statVisits').textContent = visits.length;
+        document.getElementById('statUsers').textContent = usernames.size;
+        document.getElementById('statCycle').textContent = getCurrentCycleNoIncrement();
+      }
+
+      function formatTime(ts) {
+        var d = new Date(ts);
+        return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+      }
+
+      function escapeHtml(s) {
+        if (!s) return '';
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+    })();
+  </script>
+</body>
+</html>

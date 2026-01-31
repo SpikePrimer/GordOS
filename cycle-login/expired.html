@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>License expired</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #111;
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.75rem; font-weight: 600; margin-bottom: 1rem; }
+    p { color: #444; margin-bottom: 1.5rem; }
+    a {
+      display: inline-block;
+      background: #111;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    a:hover { background: #333; }
+  </style>
+</head>
+<body>
+  <h1>Your license has expired</h1>
+  <p>Reload or use the link below to return to the login page.</p>
+  <a href="index.html" id="backLink">Return to login</a>
+
+  <script src="cycle-login.js"></script>
+  <script>
+    (function () {
+      clearSession();
+      document.getElementById('backLink').addEventListener('click', function (e) {
+        clearSession();
+      });
+    })();
+  </script>
+</body>
+</html>
