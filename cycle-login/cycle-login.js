@@ -60,10 +60,25 @@ function getPageVisits() {
 
 function addPageVisit(entry) {
   const visits = getPageVisits();
+  const ts = Date.now();
   visits.push({
     ...entry,
-    timestamp: Date.now(),
+    timestamp: entry.timestamp != null ? entry.timestamp : ts,
+    sessionStart: entry.sessionStart != null ? entry.sessionStart : (entry.type === 'app' ? ts : undefined),
   });
+  localStorage.setItem(STORAGE_KEYS.pageVisits, JSON.stringify(visits));
+}
+
+/** Update the most recent app visit for this user with duration (call on page unload). */
+function updateLastVisitDuration(username, durationMs) {
+  const visits = getPageVisits();
+  const userVisits = visits.filter((v) => v.username === username && (v.type === 'app' || v.sessionStart != null));
+  if (userVisits.length === 0) return;
+  userVisits.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  const last = userVisits[0];
+  const idx = visits.indexOf(last);
+  if (idx === -1) return;
+  visits[idx] = { ...last, durationMs: Math.round(durationMs) };
   localStorage.setItem(STORAGE_KEYS.pageVisits, JSON.stringify(visits));
 }
 
@@ -139,6 +154,19 @@ function setUserLicense(userId, expiresAt) {
   const u = users.find((x) => x.id === userId);
   if (!u) return false;
   u.licenseExpiresAt = expiresAt == null ? null : Number(expiresAt);
+  setUsers(users);
+  return true;
+}
+
+/** Reduce license by X days. If result is in the past, sets license to null. */
+function removeLicenseDays(userId, days) {
+  const users = getUsers();
+  const u = users.find((x) => x.id === userId);
+  if (!u) return false;
+  if (u.licenseExpiresAt == null) return true;
+  const ms = days * 24 * 60 * 60 * 1000;
+  const newExpiry = u.licenseExpiresAt - ms;
+  u.licenseExpiresAt = newExpiry <= Date.now() ? null : newExpiry;
   setUsers(users);
   return true;
 }

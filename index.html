@@ -48,6 +48,25 @@
       }
     })();
     </script>
+    <script>
+    (function () {
+      var session = getSession();
+      if (!session || !session.username) return;
+      var start = Date.now();
+      addPageVisit({
+        username: session.username,
+        type: 'app',
+        referrer: document.referrer || '',
+        cycle: getCurrentCycleNoIncrement(),
+        sessionStart: start
+      });
+      window.addEventListener('beforeunload', function () {
+        if (typeof updateLastVisitDuration === 'function') {
+          updateLastVisitDuration(session.username, Date.now() - start);
+        }
+      });
+    })();
+    </script>
     <div id="bootloader">
         <div class="boot-logo"><i class="fas fa-fish"></i></div>
         <h1 class="boot-title"><b>NAUTILUS OS</b></h1>
