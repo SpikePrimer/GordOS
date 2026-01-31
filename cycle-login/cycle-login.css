@@ -6,28 +6,44 @@
 }
 
 body.cycle-login-gate {
-  background: #000;
+  background: #0a0a0c;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(125, 211, 192, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 50%, rgba(125, 211, 192, 0.06), transparent),
+    radial-gradient(ellipse 60% 40% at 0% 50%, rgba(125, 211, 192, 0.06), transparent);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
   color: #fff;
 }
 
 .cycle-login-gate .gate-box {
   text-align: center;
-  padding: 2rem;
+  padding: 2.5rem 2rem;
+  background: rgba(18, 18, 22, 0.85);
+  border: 1px solid rgba(125, 211, 192, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 320px;
 }
 
 .cycle-login-gate h1 {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  margin-bottom: 2rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
   color: #fff;
+}
+
+.cycle-login-gate .gate-subtitle {
+  color: #888;
+  margin-bottom: 1.75rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .cycle-login-gate .field {
@@ -35,48 +51,58 @@ body.cycle-login-gate {
 }
 
 .cycle-login-gate input {
-  background: #111;
-  border: 1px solid #333;
+  background: rgba(10, 10, 12, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
-  padding: 0.75rem 1.25rem;
-  font-size: 1.1rem;
-  border-radius: 8px;
-  width: 220px;
+  padding: 0.85rem 1.25rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  width: 100%;
   text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .cycle-login-gate input::placeholder {
-  color: #666;
+  color: #555;
 }
 
 .cycle-login-gate input:focus {
   outline: none;
-  border-color: #555;
+  border-color: rgba(125, 211, 192, 0.5);
+  box-shadow: 0 0 0 3px rgba(125, 211, 192, 0.15);
 }
 
 .cycle-login-gate button {
-  background: #222;
-  border: 1px solid #444;
-  color: #fff;
-  padding: 0.75rem 1.5rem;
+  background: rgba(125, 211, 192, 0.2);
+  border: 1px solid rgba(125, 211, 192, 0.35);
+  color: #7dd3c0;
+  padding: 0.85rem 1.75rem;
   font-size: 1rem;
-  border-radius: 8px;
+  font-weight: 500;
+  border-radius: 10px;
   cursor: pointer;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
+  width: 100%;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
 }
 
 .cycle-login-gate button:hover {
-  background: #333;
+  background: rgba(125, 211, 192, 0.3);
+  border-color: rgba(125, 211, 192, 0.5);
+}
+
+.cycle-login-gate button:active {
+  transform: scale(0.98);
 }
 
 .cycle-login-gate .message {
   margin-top: 1rem;
   min-height: 1.5em;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .cycle-login-gate .message.error {
-  color: #e66;
+  color: #e88;
 }
 
 .cycle-login-gate .cycle-footer {
@@ -87,6 +113,33 @@ body.cycle-login-gate {
   text-align: center;
   font-size: 0.9rem;
   color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.cycle-login-gate .cycle-label {
+  color: #666;
+}
+
+.cycle-login-gate .cycle-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(125, 211, 192, 0.2);
+  border: 1px solid rgba(125, 211, 192, 0.35);
+  border-radius: 8px;
+  color: #7dd3c0;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.cycle-login-gate .cycle-of {
+  color: #555;
+  font-size: 0.85rem;
 }
 
 /* Textbook / app page */

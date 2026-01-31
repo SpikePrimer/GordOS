@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
+  <title>User</title>
   <link rel="stylesheet" href="cycle-login.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 </head>
 <body class="cycle-login-gate">
   <div class="gate-box">
-    <h1>Login</h1>
-    <p style="color: #888; margin-bottom: 1.5rem; font-size: 0.95rem;">Enter your username and the PIN for the current cycle.</p>
+    <h1>User</h1>
+    <p class="gate-subtitle">Enter your username and the PIN for the current cycle.</p>
     <div class="field">
       <input type="text" id="username" placeholder="Username" autocomplete="username" />
     </div>
@@ -19,7 +22,7 @@
     <button type="button" id="submit">Submit</button>
     <div class="message" id="message" aria-live="polite"></div>
   </div>
-  <footer class="cycle-footer" id="cycleFooter">Current cycle is <span id="cycleNum">1</span>.</footer>
+  <footer class="cycle-footer" id="cycleFooter"><span class="cycle-label">Current cycle</span> <span class="cycle-badge" id="cycleNum">1</span> <span class="cycle-of">of 5</span></footer>
 
   <script src="cycle-login.js"></script>
   <script>
