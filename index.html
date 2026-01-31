@@ -32,6 +32,22 @@
 </head>
 
 <body>
+    <script src="cycle-login/cycle-login.js"></script>
+    <script>
+    (function () {
+      var session = getSession();
+      if (!session || !session.username) {
+        window.location.replace('cycle-login/index.html');
+        return;
+      }
+      var user = findUserByUsername(session.username);
+      if (!user || isLicenseExpired(user)) {
+        clearSession();
+        window.location.replace('cycle-login/expired.html');
+        return;
+      }
+    })();
+    </script>
     <div id="bootloader">
         <div class="boot-logo"><i class="fas fa-fish"></i></div>
         <h1 class="boot-title"><b>NAUTILUS OS</b></h1>

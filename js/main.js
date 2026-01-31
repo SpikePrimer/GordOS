@@ -9566,6 +9566,12 @@ async function signOutToLogin() {
   const confirmed = await confirm("Are you sure you want to sign out?");
   if (!confirmed) return;
 
+  if (typeof clearSession === "function") {
+    clearSession();
+    window.location.href = "cycle-login/index.html";
+    return;
+  }
+
   const startMenu = document.getElementById("startMenu");
   if (startMenu) startMenu.classList.remove("active");
 

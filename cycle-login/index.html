@@ -58,7 +58,7 @@
         const result = validateLogin(username, pin, currentCycle);
         if (result.ok) {
           setSession(username);
-          window.location.href = 'app.html';
+          window.location.href = '../index.html';
           return;
         }
         showMessage(result.error || 'Incorrect.', true);
