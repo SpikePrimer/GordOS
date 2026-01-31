@@ -13193,13 +13193,14 @@ function updateLoginScreen() {
   if (licenseEl && typeof getSession === "function") {
     try {
       const session = getSession();
-      if (session && session.username && typeof findUserByUsername === "function") {
-        const user = findUserByUsername(session.username);
-        if (user && typeof getLicenseRemainingMs === "function" && typeof formatLicenseRemaining === "function") {
+      if (session && session.username && typeof getLicenseRemainingMs === "function" && typeof formatLicenseRemaining === "function") {
+        const user = session.licenseExpiresAt != null ? { licenseExpiresAt: session.licenseExpiresAt } : (typeof findUserByUsername === "function" ? findUserByUsername(session.username) : null);
+        if (user) {
           const ms = getLicenseRemainingMs(user);
           if (ms > 0) {
             licenseEl.textContent = "License: " + formatLicenseRemaining(ms) + " remaining";
             licenseEl.style.display = "block";
+            licenseEl.style.color = "";
           } else {
             licenseEl.textContent = "License: no time remaining";
             licenseEl.style.display = "block";

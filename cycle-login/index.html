@@ -10,6 +10,18 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 </head>
 <body class="cycle-login-gate">
+  <div class="meteors" aria-hidden="true">
+    <div class="meteor m1"></div>
+    <div class="meteor m2"></div>
+    <div class="meteor m3"></div>
+    <div class="meteor m4"></div>
+    <div class="meteor m5"></div>
+    <div class="meteor m6"></div>
+    <div class="meteor m7"></div>
+    <div class="meteor m8"></div>
+    <div class="meteor m9"></div>
+    <div class="meteor m10"></div>
+  </div>
   <div class="gate-box">
     <h1>User</h1>
     <p class="gate-subtitle">Enter your username and the PIN for the current cycle.</p>
@@ -24,24 +36,39 @@
   </div>
   <footer class="cycle-footer" id="cycleFooter"><span class="cycle-label">Current cycle</span> <span class="cycle-badge" id="cycleNum">1</span> <span class="cycle-of">of 5</span></footer>
 
+  <script src="config.js"></script>
   <script src="cycle-login.js"></script>
   <script>
     (function () {
-      const currentCycle = getCurrentCycle();
-      document.getElementById('cycleNum').textContent = currentCycle;
-      addPageVisit({ type: 'login_page', referrer: document.referrer || '', cycle: currentCycle });
-
       const usernameEl = document.getElementById('username');
       const pinEl = document.getElementById('pin');
       const submitBtn = document.getElementById('submit');
       const messageEl = document.getElementById('message');
+      let currentCycle = 1;
 
       function showMessage(text, isError) {
         messageEl.textContent = text;
         messageEl.className = 'message' + (isError ? ' error' : '');
       }
 
-      function doSubmit() {
+      async function init() {
+        const api = getApiUrl();
+        if (api) {
+          try {
+            currentCycle = await getCurrentCycleAsync();
+            await addPageVisitAsync({ type: 'login_page', referrer: document.referrer || '', cycle: currentCycle });
+          } catch (e) {
+            currentCycle = getCurrentCycle();
+            addPageVisit({ type: 'login_page', referrer: document.referrer || '', cycle: currentCycle });
+          }
+        } else {
+          currentCycle = getCurrentCycle();
+          addPageVisit({ type: 'login_page', referrer: document.referrer || '', cycle: currentCycle });
+        }
+        document.getElementById('cycleNum').textContent = currentCycle;
+      }
+
+      async function doSubmit() {
         const username = usernameEl.value.trim();
         const pin = pinEl.value.trim();
         messageEl.textContent = '';
@@ -58,26 +85,38 @@
           showMessage('Enter your username.', true);
           return;
         }
-        const result = validateLogin(username, pin, currentCycle);
+        let result;
+        const api = getApiUrl();
+        if (api) {
+          try {
+            result = await validateLoginAsync(username, pin, currentCycle);
+          } catch (e) {
+            showMessage('Network error. Try again.', true);
+            return;
+          }
+        } else {
+          result = validateLogin(username, pin, currentCycle);
+        }
         if (result.ok) {
           if (result.dev) {
             setDevAuth();
             window.location.href = 'dev.html';
             return;
           }
-          var user = findUserByUsername(username);
-          if (!user || isLicenseExpired(user)) {
+          var licenseExpiresAt = result.licenseExpiresAt != null ? result.licenseExpiresAt : (findUserByUsername(username) || {}).licenseExpiresAt;
+          if (licenseExpiresAt == null || Date.now() >= licenseExpiresAt) {
             showMessage('No days left on license.', true);
             return;
           }
-          setSession(username);
+          setSession(username, licenseExpiresAt);
           window.location.href = '../index.html';
           return;
         }
         showMessage(result.error || 'Incorrect.', true);
       }
 
-      submitBtn.addEventListener('click', doSubmit);
+      init();
+      submitBtn.addEventListener('click', function () { doSubmit(); });
       pinEl.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') doSubmit();
       });

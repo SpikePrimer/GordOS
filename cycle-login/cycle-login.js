@@ -95,8 +95,8 @@ function getSession() {
   }
 }
 
-function setSession(username) {
-  sessionStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ username, at: Date.now() }));
+function setSession(username, licenseExpiresAt) {
+  sessionStorage.setItem(STORAGE_KEYS.session, JSON.stringify({ username, at: Date.now(), licenseExpiresAt: licenseExpiresAt != null ? licenseExpiresAt : undefined }));
 }
 
 function clearSession() {
@@ -237,4 +237,121 @@ function getVisitsByUser() {
     byUser[u].push(v);
   });
   return byUser;
+}
+
+// --- API mode (cross-device): set window.CYCLE_LOGIN_API_URL in config.js ---
+const DEV_TOKEN_KEY = 'cycle_login_dev_token';
+
+function getApiUrl() {
+  try {
+    const u = typeof window !== 'undefined' && window.CYCLE_LOGIN_API_URL;
+    return u ? String(window.CYCLE_LOGIN_API_URL).replace(/\/$/, '') : '';
+  } catch {
+    return '';
+  }
+}
+
+function getDevToken() {
+  try {
+    return sessionStorage.getItem(DEV_TOKEN_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+function setDevToken(token) {
+  try {
+    if (token) sessionStorage.setItem(DEV_TOKEN_KEY, token);
+    else sessionStorage.removeItem(DEV_TOKEN_KEY);
+  } catch (_) {}
+}
+
+async function apiRequest(method, path, body, useDevToken) {
+  const base = getApiUrl();
+  if (!base) return null;
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (useDevToken && getDevToken()) opts.headers['Authorization'] = 'Bearer ' + getDevToken();
+  if (body != null && method !== 'GET') opts.body = JSON.stringify(body);
+  const res = await fetch(base + path, opts);
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || res.statusText);
+  return text ? JSON.parse(text) : null;
+}
+
+async function getCurrentCycleAsync() {
+  const data = await apiRequest('POST', '/api/visit-count/inc', null, false);
+  return data ? data.cycle : 1;
+}
+
+async function addPageVisitAsync(entry) {
+  await apiRequest('POST', '/api/visits', { ...entry, timestamp: entry.timestamp || Date.now(), sessionStart: entry.sessionStart }, false);
+}
+
+async function validateLoginAsync(username, pin, currentCycle) {
+  const data = await apiRequest('POST', '/api/validate', { username, pin, cycle: currentCycle }, false);
+  return data || { ok: false, error: 'Network error' };
+}
+
+async function updateLastVisitDurationAsync(username, durationMs) {
+  await apiRequest('PATCH', '/api/visits/last-duration', { username, durationMs }, false);
+}
+
+async function getUsersAsync() {
+  const data = await apiRequest('GET', '/api/users', null, true);
+  return Array.isArray(data) ? data : [];
+}
+
+async function createUserAsync(username) {
+  return await apiRequest('POST', '/api/users', { username }, true) || { ok: false, error: 'Network error' };
+}
+
+async function deleteUserAsync(id) {
+  await apiRequest('DELETE', '/api/users/' + encodeURIComponent(id), null, true);
+}
+
+async function getPageVisitsAsync() {
+  const data = await apiRequest('GET', '/api/visits', null, true);
+  return Array.isArray(data) ? data : [];
+}
+
+async function setUserLicenseAsync(userId, expiresAt) {
+  await apiRequest('PATCH', '/api/users/' + encodeURIComponent(userId) + '/license', { expiresAt }, true);
+}
+
+async function removeLicenseDaysAsync(userId, days) {
+  await apiRequest('PATCH', '/api/users/' + encodeURIComponent(userId) + '/license', { removeDays: days }, true);
+}
+
+async function bulkAddLicenseDaysAsync(days) {
+  const data = await apiRequest('POST', '/api/users/bulk-add-license', { days }, true);
+  return data && data.count != null ? data.count : 0;
+}
+
+async function resetVisitCountAsync() {
+  await apiRequest('POST', '/api/visit-count/reset', null, true);
+}
+
+async function getVisitCountAsync() {
+  const data = await apiRequest('GET', '/api/visit-count', null, false);
+  return data && data.count != null ? data.count : 0;
+}
+
+/** When using API: get current cycle without incrementing. */
+async function getCurrentCycleNoIncrementAsync() {
+  const count = await getVisitCountAsync();
+  return ((count - 1) % 5) + 1;
+}
+
+/** Exchange dev PIN for token; call when opening dev panel with API. Returns true if success. */
+async function apiDevAuth(pin) {
+  const base = getApiUrl();
+  if (!base) return false;
+  try {
+    const data = await apiRequest('POST', '/api/auth/dev', { pin }, false);
+    if (data && data.token) {
+      setDevToken(data.token);
+      return true;
+    }
+  } catch (_) {}
+  return false;
 }

@@ -32,6 +32,7 @@
 </head>
 
 <body>
+    <script src="cycle-login/config.js"></script>
     <script src="cycle-login/cycle-login.js"></script>
     <script>
     (function () {
@@ -53,16 +54,23 @@
       var session = getSession();
       if (!session || !session.username) return;
       var start = Date.now();
-      addPageVisit({
-        username: session.username,
-        type: 'app',
-        referrer: document.referrer || '',
-        cycle: getCurrentCycleNoIncrement(),
-        sessionStart: start
-      });
+      var api = typeof getApiUrl === 'function' && getApiUrl();
+      if (api) {
+        (async function () {
+          try {
+            var cycle = typeof getCurrentCycleNoIncrementAsync === 'function' ? await getCurrentCycleNoIncrementAsync() : getCurrentCycleNoIncrement();
+            await addPageVisitAsync({ username: session.username, type: 'app', referrer: document.referrer || '', cycle: cycle, sessionStart: start });
+          } catch (_) {}
+        })();
+      } else {
+        addPageVisit({ username: session.username, type: 'app', referrer: document.referrer || '', cycle: getCurrentCycleNoIncrement(), sessionStart: start });
+      }
       window.addEventListener('beforeunload', function () {
-        if (typeof updateLastVisitDuration === 'function') {
-          updateLastVisitDuration(session.username, Date.now() - start);
+        var dur = Date.now() - start;
+        if (api && typeof updateLastVisitDurationAsync === 'function') {
+          updateLastVisitDurationAsync(session.username, dur).catch(function () {});
+        } else if (typeof updateLastVisitDuration === 'function') {
+          updateLastVisitDuration(session.username, dur);
         }
       });
     })();

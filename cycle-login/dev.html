@@ -175,6 +175,7 @@
     </section>
   </div>
 
+  <script src="config.js"></script>
   <script src="cycle-login.js"></script>
   <script>
     (function () {
@@ -183,6 +184,7 @@
       const devPinEl = document.getElementById('devPin');
       const devPinSubmit = document.getElementById('devPinSubmit');
       const devPinError = document.getElementById('devPinError');
+      const useApi = typeof getApiUrl === 'function' && getApiUrl();
 
       if (isDevAuth()) {
         gateEl.style.display = 'none';
@@ -190,8 +192,19 @@
         initPanel();
       } else {
         gateEl.style.display = 'block';
-        devPinSubmit.addEventListener('click', function () {
-          if (devPinEl.value.trim() === DEV_PIN) {
+        devPinSubmit.addEventListener('click', async function () {
+          var pin = devPinEl.value.trim();
+          if (useApi) {
+            devPinError.textContent = '';
+            if (await apiDevAuth(pin)) {
+              setDevAuth();
+              gateEl.style.display = 'none';
+              contentEl.style.display = 'block';
+              initPanel();
+            } else {
+              devPinError.textContent = 'Incorrect dev PIN or server error.';
+            }
+          } else if (pin === DEV_PIN) {
             setDevAuth();
             gateEl.style.display = 'none';
             contentEl.style.display = 'block';
@@ -205,15 +218,15 @@
         });
       }
 
-      function initPanel() {
-        renderUsers();
-        renderVisits();
-        renderStats();
+      async function initPanel() {
+        await renderUsers();
+        await renderVisits();
+        await renderStats();
         applyVisitsFilter();
 
         document.getElementById('visitsSearch').addEventListener('input', applyVisitsFilter);
-        document.getElementById('exportVisits').addEventListener('click', function () {
-          var visits = getPageVisits();
+        document.getElementById('exportVisits').addEventListener('click', async function () {
+          var visits = useApi ? await getPageVisitsAsync() : getPageVisits();
           var blob = new Blob([JSON.stringify(visits, null, 2)], { type: 'application/json' });
           var a = document.createElement('a');
           a.href = URL.createObjectURL(blob);
@@ -221,19 +234,19 @@
           a.click();
           URL.revokeObjectURL(a.href);
         });
-        document.getElementById('resetCycle').addEventListener('click', function () {
+        document.getElementById('resetCycle').addEventListener('click', async function () {
           if (confirm('Reset the cycle counter to 1? Next login page visit will be cycle 1.')) {
-            resetVisitCount();
-            renderStats();
+            if (useApi) await resetVisitCountAsync(); else resetVisitCount();
+            await renderStats();
           }
         });
-        document.getElementById('bulkAddLicense').addEventListener('click', function () {
-          var n = bulkAddLicenseDays(30);
+        document.getElementById('bulkAddLicense').addEventListener('click', async function () {
+          var n = useApi ? await bulkAddLicenseDaysAsync(30) : bulkAddLicenseDays(30);
           alert(n > 0 ? 'Added 30 days to ' + n + ' account(s).' : 'No accounts with active license.');
-          renderUsers();
+          await renderUsers();
         });
 
-        document.getElementById('createUser').addEventListener('click', function () {
+        document.getElementById('createUser').addEventListener('click', async function () {
           const input = document.getElementById('newUsername');
           const username = input.value.trim();
           const resultEl = document.getElementById('createResult');
@@ -246,14 +259,14 @@
             resultEl.className = 'error';
             return;
           }
-          const result = createUser(username);
+          const result = useApi ? await createUserAsync(username) : createUser(username);
           if (result.ok) {
             resultEl.textContent = 'Account created.';
             resultEl.className = '';
             codesEl.innerHTML = result.cycleCodes.map(function (c, i) { return '<span>C' + (i + 1) + ': ' + c + '</span>'; }).join('');
             warningEl.style.display = 'block';
             input.value = '';
-            renderUsers();
+            await renderUsers();
           } else {
             resultEl.textContent = result.error || 'Failed.';
             resultEl.className = 'error';
@@ -268,8 +281,8 @@
         return { text: 'License: ' + formatLicenseRemaining(ms) + ' remaining (expires ' + formatTime(u.licenseExpiresAt) + ')', cls: 'ok' };
       }
 
-      function renderUsers() {
-        const users = getUsers();
+      async function renderUsers() {
+        const users = useApi ? await getUsersAsync() : getUsers();
         const ul = document.getElementById('userList');
         ul.innerHTML = users.map(function (u) {
           const visits = getPageVisits().filter(function (v) { return v.username === u.username; });
@@ -279,47 +292,50 @@
         }).join('') || '<li class="meta">No accounts yet. Create one above.</li>';
 
         ul.querySelectorAll('.delete-user').forEach(function (btn) {
-          btn.addEventListener('click', function () {
+          btn.addEventListener('click', async function () {
             if (confirm('Remove this account? They will not be able to log in.')) {
-              deleteUser(btn.getAttribute('data-id'));
-              renderUsers();
-              renderVisits();
-              renderStats();
+              var id = btn.getAttribute('data-id');
+              if (useApi) await deleteUserAsync(id); else deleteUser(id);
+              await renderUsers();
+              await renderVisits();
+              await renderStats();
             }
           });
         });
         ul.querySelectorAll('.add-license').forEach(function (btn) {
-          btn.addEventListener('click', function () {
+          btn.addEventListener('click', async function () {
             var li = btn.closest('li');
             var userId = li.getAttribute('data-user-id');
             var input = li.querySelector('.license-days');
             var days = parseInt(input.value, 10) || 30;
             if (days < 1) days = 1;
-            var user = getUserById(userId);
+            var users = useApi ? await getUsersAsync() : getUsers();
+            var user = users.find(function (u) { return u.id === userId; });
             if (!user) return;
             var base = user.licenseExpiresAt != null && user.licenseExpiresAt > Date.now() ? user.licenseExpiresAt : Date.now();
-            setUserLicense(userId, base + days * 24 * 60 * 60 * 1000);
-            renderUsers();
+            var expiresAt = base + days * 24 * 60 * 60 * 1000;
+            if (useApi) await setUserLicenseAsync(userId, expiresAt); else setUserLicense(userId, expiresAt);
+            await renderUsers();
           });
         });
         ul.querySelectorAll('.remove-license').forEach(function (btn) {
-          btn.addEventListener('click', function () {
+          btn.addEventListener('click', async function () {
             var li = btn.closest('li');
             var userId = li.getAttribute('data-user-id');
-            setUserLicense(userId, null);
-            renderUsers();
+            if (useApi) await setUserLicenseAsync(userId, null); else setUserLicense(userId, null);
+            await renderUsers();
           });
         });
         ul.querySelectorAll('.remove-days').forEach(function (btn) {
-          btn.addEventListener('click', function (e) {
+          btn.addEventListener('click', async function (e) {
             e.stopPropagation();
             var li = btn.closest('li');
             var userId = li.getAttribute('data-user-id');
             var input = li.querySelector('.license-remove-days');
             var days = parseInt(input && input.value, 10) || 7;
             if (days < 1) days = 1;
-            removeLicenseDays(userId, days);
-            renderUsers();
+            if (useApi) await removeLicenseDaysAsync(userId, days); else removeLicenseDays(userId, days);
+            await renderUsers();
           });
         });
         ul.querySelectorAll('.open-stats').forEach(function (a) {
@@ -360,11 +376,13 @@
         return (Math.round(ms / 3600000 * 10) / 10) + 'h';
       }
 
-      function openAccountModal(userId, username) {
-        var user = getUserById(userId);
+      async function openAccountModal(userId, username) {
+        var users = useApi ? await getUsersAsync() : getUsers();
+        var user = users.find(function (u) { return u.id === userId; });
         if (!user) return;
         document.getElementById('modalUserName').textContent = username;
-        var visits = getPageVisits().filter(function (v) { return v.username === username; }).sort(function (a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+        var allVisits = useApi ? await getPageVisitsAsync() : getPageVisits();
+        var visits = allVisits.filter(function (v) { return v.username === username; }).sort(function (a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
         var totalMs = visits.reduce(function (sum, v) { return sum + (v.durationMs || 0); }, 0);
         document.getElementById('modalTotalTime').textContent = totalMs > 0 ? formatDuration(totalMs) + ' total' : 'No duration data yet';
         var codesHtml = (user.cycleCodes || []).map(function (c, i) {
@@ -404,8 +422,9 @@
         });
       }
 
-      function renderVisits() {
-        const visits = getPageVisits().slice().reverse();
+      async function renderVisits() {
+        const raw = useApi ? await getPageVisitsAsync() : getPageVisits();
+        const visits = raw.slice().reverse();
         const tbody = document.getElementById('visitsBody');
         tbody.innerHTML = visits.map(function (v) {
           var dur = v.durationMs != null ? formatDuration(v.durationMs) : '—';
@@ -414,12 +433,13 @@
         applyVisitsFilter();
       }
 
-      function renderStats() {
-        const visits = getPageVisits();
+      async function renderStats() {
+        const visits = useApi ? await getPageVisitsAsync() : getPageVisits();
         const usernames = new Set(visits.map(function (v) { return v.username || '(login page)'; }));
         document.getElementById('statVisits').textContent = visits.length;
         document.getElementById('statUsers').textContent = usernames.size;
-        document.getElementById('statCycle').textContent = getCurrentCycleNoIncrement();
+        var cycle = useApi ? await getCurrentCycleNoIncrementAsync() : getCurrentCycleNoIncrement();
+        document.getElementById('statCycle').textContent = cycle;
       }
 
       function formatTime(ts) {
