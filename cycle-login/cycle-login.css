@@ -21,26 +21,27 @@ body.cycle-login-gate {
   overflow: hidden;
 }
 
-/* Flying meteors */
+/* Flying meteors – real flying effect with glow and trail */
 .cycle-login-gate .meteors {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  overflow: hidden;
 }
 
 .cycle-login-gate .meteor {
   position: absolute;
-  width: 3px;
-  height: 3px;
-  background: rgba(125, 211, 192, 0.95);
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, rgba(125, 211, 192, 0.95) 40%, rgba(125, 211, 192, 0.4) 100%);
   border-radius: 50%;
   box-shadow:
-    0 0 8px 3px rgba(125, 211, 192, 0.5),
-    0 0 16px 6px rgba(125, 211, 192, 0.25),
-    30px 30px 0 0 rgba(125, 211, 192, 0.12),
-    60px 60px 0 0 rgba(125, 211, 192, 0.06);
-  animation: meteor-fall linear infinite;
+    0 0 10px 4px rgba(125, 211, 192, 0.7),
+    0 0 20px 8px rgba(125, 211, 192, 0.4),
+    0 0 40px 12px rgba(125, 211, 192, 0.2);
+  animation: meteor-fly linear infinite;
+  transform-origin: center center;
 }
 
 .cycle-login-gate .meteor::before {
@@ -48,28 +49,67 @@ body.cycle-login-gate {
   position: absolute;
   top: 50%;
   left: 0;
-  width: 60px;
-  height: 2px;
-  margin-top: -1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(125, 211, 192, 0.4) 40%, rgba(125, 211, 192, 0.8) 100%);
+  width: 90px;
+  height: 3px;
+  margin-top: -1.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(125, 211, 192, 0.15) 20%,
+    rgba(125, 211, 192, 0.5) 50%,
+    rgba(125, 211, 192, 0.9) 85%,
+    rgba(255, 255, 255, 0.6) 100%
+  );
   transform: translateX(-100%);
+  filter: blur(1px);
+  border-radius: 2px;
 }
 
-.cycle-login-gate .m1 { left: 10%; top: -20px; animation-duration: 4s; animation-delay: 0s; }
-.cycle-login-gate .m2 { left: 25%; top: -20px; animation-duration: 5s; animation-delay: 0.8s; opacity: 0.8; }
-.cycle-login-gate .m3 { left: 45%; top: -20px; animation-duration: 3.5s; animation-delay: 1.5s; }
-.cycle-login-gate .m4 { left: 60%; top: -20px; animation-duration: 4.8s; animation-delay: 2.2s; opacity: 0.7; }
-.cycle-login-gate .m5 { left: 75%; top: -20px; animation-duration: 4.2s; animation-delay: 0.3s; }
-.cycle-login-gate .m6 { left: 15%; top: -20px; animation-duration: 5.5s; animation-delay: 3s; opacity: 0.6; }
-.cycle-login-gate .m7 { left: 35%; top: -20px; animation-duration: 3.8s; animation-delay: 1.2s; }
-.cycle-login-gate .m8 { left: 55%; top: -20px; animation-duration: 4.5s; animation-delay: 2.8s; }
-.cycle-login-gate .m9 { left: 85%; top: -20px; animation-duration: 4s; animation-delay: 1.8s; opacity: 0.75; }
-.cycle-login-gate .m10 { left: 5%; top: -20px; animation-duration: 5s; animation-delay: 4s; }
+.cycle-login-gate .meteor::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 140px;
+  height: 1px;
+  margin-top: -0.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(125, 211, 192, 0.08) 30%,
+    rgba(125, 211, 192, 0.25) 70%,
+    rgba(125, 211, 192, 0.4) 100%
+  );
+  transform: translateX(-100%);
+  border-radius: 1px;
+}
 
-@keyframes meteor-fall {
-  0% { transform: translate(0, 0) rotate(-45deg); opacity: 1; }
-  70% { opacity: 0.6; }
-  100% { transform: translate(120px, 100vh) rotate(-45deg); opacity: 0; }
+.cycle-login-gate .m1 { left: 8%; top: -30px; animation-duration: 3.2s; animation-delay: 0s; }
+.cycle-login-gate .m2 { left: 22%; top: -30px; animation-duration: 4.5s; animation-delay: 0.6s; opacity: 0.85; }
+.cycle-login-gate .m3 { left: 42%; top: -30px; animation-duration: 2.8s; animation-delay: 1.2s; }
+.cycle-login-gate .m4 { left: 58%; top: -30px; animation-duration: 4s; animation-delay: 1.8s; opacity: 0.75; }
+.cycle-login-gate .m5 { left: 78%; top: -30px; animation-duration: 3.5s; animation-delay: 0.2s; }
+.cycle-login-gate .m6 { left: 12%; top: -30px; animation-duration: 5s; animation-delay: 2.5s; opacity: 0.7; }
+.cycle-login-gate .m7 { left: 38%; top: -30px; animation-duration: 3.3s; animation-delay: 0.9s; }
+.cycle-login-gate .m8 { left: 52%; top: -30px; animation-duration: 4.2s; animation-delay: 2.2s; }
+.cycle-login-gate .m9 { left: 88%; top: -30px; animation-duration: 3.6s; animation-delay: 1.5s; opacity: 0.8; }
+.cycle-login-gate .m10 { left: 3%; top: -30px; animation-duration: 4.8s; animation-delay: 3.2s; opacity: 0.65; }
+
+@keyframes meteor-fly {
+  0% {
+    transform: translate(0, 0) rotate(-52deg) scale(1);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(180px, 110vh) rotate(-52deg) scale(0.6);
+    opacity: 0;
+  }
 }
 
 .cycle-login-gate .gate-box {
@@ -113,22 +153,39 @@ body.cycle-login-gate {
   border-radius: 10px;
   width: 100%;
   text-align: center;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
 }
 
 .cycle-login-gate input::placeholder {
   color: #555;
 }
 
+.cycle-login-gate input:hover {
+  border-color: rgba(125, 211, 192, 0.25);
+  box-shadow: 0 0 12px rgba(125, 211, 192, 0.08);
+}
+
 .cycle-login-gate input:focus {
   outline: none;
-  border-color: rgba(125, 211, 192, 0.5);
-  box-shadow: 0 0 0 3px rgba(125, 211, 192, 0.15);
+  border-color: rgba(125, 211, 192, 0.6);
+  box-shadow:
+    0 0 0 3px rgba(125, 211, 192, 0.2),
+    0 0 20px rgba(125, 211, 192, 0.15);
+  transform: scale(1.01);
+}
+
+.cycle-login-gate input.typing {
+  animation: input-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes input-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(125, 211, 192, 0.2), 0 0 20px rgba(125, 211, 192, 0.15); }
+  50% { box-shadow: 0 0 0 4px rgba(125, 211, 192, 0.25), 0 0 28px rgba(125, 211, 192, 0.2); }
 }
 
 .cycle-login-gate button {
-  background: rgba(125, 211, 192, 0.2);
-  border: 1px solid rgba(125, 211, 192, 0.35);
+  background: linear-gradient(135deg, rgba(125, 211, 192, 0.25) 0%, rgba(125, 211, 192, 0.15) 100%);
+  border: 1px solid rgba(125, 211, 192, 0.4);
   color: #7dd3c0;
   padding: 0.85rem 1.75rem;
   font-size: 1rem;
@@ -137,16 +194,55 @@ body.cycle-login-gate {
   cursor: pointer;
   margin-top: 0.75rem;
   width: 100%;
-  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cycle-login-gate button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 .cycle-login-gate button:hover {
-  background: rgba(125, 211, 192, 0.3);
-  border-color: rgba(125, 211, 192, 0.5);
+  background: linear-gradient(135deg, rgba(125, 211, 192, 0.35) 0%, rgba(125, 211, 192, 0.22) 100%);
+  border-color: rgba(125, 211, 192, 0.55);
+  box-shadow: 0 0 20px rgba(125, 211, 192, 0.2);
+  transform: translateY(-2px);
+}
+
+.cycle-login-gate button:hover::before {
+  opacity: 1;
 }
 
 .cycle-login-gate button:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 0 8px rgba(125, 211, 192, 0.15);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.cycle-login-gate button.ripple::after {
+  content: '';
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.25) 0%, transparent 55%);
+  transform: translate(-50%, -50%) scale(0);
+  animation: btn-ripple 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes btn-ripple {
+  to {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
 }
 
 .cycle-login-gate .message {

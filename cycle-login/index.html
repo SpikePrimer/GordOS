@@ -116,12 +116,26 @@
       }
 
       init();
+      submitBtn.addEventListener('mousedown', function (e) {
+        var rect = submitBtn.getBoundingClientRect();
+        submitBtn.style.setProperty('--x', (e.clientX - rect.left) + 'px');
+        submitBtn.style.setProperty('--y', (e.clientY - rect.top) + 'px');
+        submitBtn.classList.add('ripple');
+        setTimeout(function () { submitBtn.classList.remove('ripple'); }, 600);
+      });
       submitBtn.addEventListener('click', function () { doSubmit(); });
       pinEl.addEventListener('keydown', function (e) {
+        pinEl.classList.add('typing');
         if (e.key === 'Enter') doSubmit();
       });
       usernameEl.addEventListener('keydown', function (e) {
+        usernameEl.classList.add('typing');
         if (e.key === 'Enter') { pinEl.focus(); }
+      });
+      [usernameEl, pinEl].forEach(function (el) {
+        el.addEventListener('focus', function () { el.classList.add('typing'); });
+        el.addEventListener('blur', function () { el.classList.remove('typing'); });
+        el.addEventListener('input', function () { el.classList.add('typing'); clearTimeout(el._typingOff); el._typingOff = setTimeout(function () { el.classList.remove('typing'); }, 1200); });
       });
     })();
   </script>
